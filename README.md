@@ -6,8 +6,8 @@ _REPLACE OR REMOVE EVERYTING BETWEEN "\_"_
 
 ### Student Info
 
--   Name: _YOUR NAME_
--   Section: _##_
+-   Name: Luke Lepkowski (lpl6448@rit.edu)
+-   Section: 04
 
 ## Simulation Design
 
