@@ -11,7 +11,7 @@ _REPLACE OR REMOVE EVERYTING BETWEEN "\_"_
 
 ## Simulation Design
 
-_A brief explanation of your simulation._
+This will be a Christmas-themed game where help Santa's elves meet their quotas. Elves will walk around the workshop, grabbing parts and making toys, as evil snowmen try to stop them by chasing and throwing snowballs at the elves.
 
 ### Controls
 
@@ -19,73 +19,115 @@ _A brief explanation of your simulation._
     -   _Include how to preform each action ( keyboard, mouse, UI Input )_
     -   _Include what impact an action has in the simulation ( if is could be unclear )_
 
-## _Agent 1 Name_
+## Elf
 
-_A brief explanation of this agent._
+The elf will construct parts and toys and carry them to different stations in the workshop.
 
-### _State 1 Name_
+### Looking for Work
 
-**Objective:** _A brief explanation of this state's objective._
-
-#### Steering Behaviors
-
-- _List all behaviors used by this state_
-   - _If behavior has input data list it here_
-   - _eg, Flee - nearest Agent2_
-- Obstacles - _List all obstacle types this state avoids_
-- Seperation - _List all agents this state seperates from_
-   
-#### State Transistions
-
-- _List all the ways this agent can transition to this state_
-   - _eg, When this agent gets within range of Agent2_
-   - _eg, When this agent has reached target of State2_
-   
-### _State 2 Name_
-
-**Objective:** _A brief explanation of this state's objective._
+**Objective:** Approach a station with a task that needs completing.
 
 #### Steering Behaviors
 
-- _List all behaviors used by this state_
-- Obstacles - _List all obstacle types this state avoids_
-- Seperation - _List all agents this state seperates from_
+- Behaviors
+   - Seek chosen station (station will be chosen in the transition to this state)
+   - Flee from snowmen within a certain radius
+   - Stay within the workshop bounds
+- Obstacles - Stations (other than the chosen station)
+- Separation - Elves, Snowmen
    
 #### State Transistions
 
-- _List all the ways this agent can transition to this state_
+- When this elf delivers a part/toy to a station
+- When this elf is no longer frozen
+   
+### Working
 
-## _Agent 2 Name_
-
-_A brief explanation of this agent._
-
-### _State 1 Name_
-
-**Objective:** _A brief explanation of this state's objective._
+**Objective:** Stay at the current station for a certain amount of time.
 
 #### Steering Behaviors
 
-- _List all behaviors used by this state_
-- Obstacles - _List all obstacle types this state avoids_
-- Seperation - _List all agents this state seperates from_
+- Behaviors
+   - Play animation to make part/toy
+- Obstacles - None (because the elf is stationary)
+- Separation - None
    
 #### State Transistions
 
-- _List all the ways this agent can transition to this state_
+- When this elf approaches a station (if looking for work)
    
-### _State 2 Name_
+### Carrying
 
-**Objective:** _A brief explanation of this state's objective._
+**Objective:** Deliver a part/toy to a particular station.
 
 #### Steering Behaviors
 
-- _List all behaviors used by this state_
-- Obstacles - _List all obstacle types this state avoids_
-- Seperation - _List all agents this state seperates from_
+- Behaviors
+   - Seek chosen station (station will be chosen in the transition to this state)
+   - Flee from snowmen within a certain radius
+   - Stay within the workshop bounds
+- Obstacles - Stations (other than the chosen station), dropped parts/toys
+- Separation - Elves, Snowmen
    
 #### State Transistions
 
-- _List all the ways this agent can transition to this state_
+- When this elf finishes work at a station
+- When this elf touches a dropped part/toy
+   
+### Frozen
+
+**Objective:** Wait for the cooldown to become unfrozen.
+
+#### Steering Behaviors
+
+- Behaviors
+   - Play frozen effect
+   - Drop current part/toy
+- Obstacles - None (because the elf is stationary)
+- Separation - None
+   
+#### State Transistions
+
+- When this elf is touched by a snowman
+- When this elf is hit by a snowball
+
+## Snowman
+
+The snowman will wander around the map, attempting to freeze elves by touching them or throwing snowballs.
+
+### Throwing
+
+**Objective:** Wander around the outside of the map, throwing snowballs at nearby elves.
+
+#### Steering Behaviors
+
+- Behaviors
+   - Wander
+   - Stay outside of the workshop bounds
+   - Stay within the map bounds
+   - Throw snowballs at nearby elves occasionally
+- Obstacles - Stations, dropped parts/toys
+- Separation - Snowmen, elves
+   
+#### State Transistions
+
+- When this snowman touches and freezes an elf
+   
+### Charging
+
+**Objective:** Run into the workshop and freeze an elf.
+
+#### Steering Behaviors
+
+- Behaviors
+   - Seek the nearest elf
+   - Stay within the map bounds
+- Obstacles - Stations, dropped parts/toys
+- Separation - Snowmen
+   
+#### State Transistions
+
+- Random chance after throwing a snowball
 
 ## Sources
 
@@ -94,9 +136,9 @@ _A brief explanation of this agent._
 
 ## Make it Your Own
 
-- _List out what you added to your game to make it different for you_
-- _If you will add more agents or states make sure to list here and add it to the documention above_
-- _If you will add your own assets make sure to list it here and add it to the Sources section
+- I added two more states to the elf (Working and Frozen). These states do not have steering forces because they effectively freeze the elf.
+- I will make the game in 3D (using a mostly topdown perspective) and will let the player rotate the camera around the workshop.
+- I will make the elves and toys/parts out of voxels to fit the 3D style.
 
 ## Known Issues
 
