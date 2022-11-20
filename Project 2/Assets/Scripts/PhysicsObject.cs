@@ -71,6 +71,11 @@ public class PhysicsObject : MonoBehaviour
     public Vector3 Direction => direction;
 
     /// <summary>
+    /// Normalized right direction of this object
+    /// </summary>
+    public Vector3 Right => transform.right;
+
+    /// <summary>
     /// Current position of this object in the world
     /// </summary>
     public Vector3 Position => transform.position;

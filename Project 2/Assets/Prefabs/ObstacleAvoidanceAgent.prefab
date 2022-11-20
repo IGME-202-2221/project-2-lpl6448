@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 3120099152090386748}
   - component: {fileID: 2822692054402200267}
   m_Layer: 0
-  m_Name: SeparationAgent
+  m_Name: ObstacleAvoidanceAgent
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46,13 +46,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 144d885606592f0419d2b4f72f0a6a29, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mass: 2
+  mass: 1
   bounceOffWalls: 0
   useGravity: 0
   gravityStrength: 1
   useFriction: 0
   frictionCoefficient: 0.7
-  radius: 0.25
+  radius: 0.5
 --- !u!114 &2822692054402200267
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -70,7 +70,8 @@ MonoBehaviour:
   maxForce: 5
   maxWanderAngle: 45
   maxWanderChangePerSecond: 10
-  personalSpace: 2
+  personalSpace: 1
+  visionRange: 2
 --- !u!1 &3120099152532536679
 GameObject:
   m_ObjectHideFlags: 0

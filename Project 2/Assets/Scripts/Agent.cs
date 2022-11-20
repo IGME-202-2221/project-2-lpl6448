@@ -41,6 +41,11 @@ public abstract class Agent : MonoBehaviour
     public float personalSpace = 1;
 
     /// <summary>
+    /// Maximum distance that an obstacle can be in front of this Agent before attempting to avoid the obstacle
+    /// </summary>
+    public float visionRange = 2;
+
+    /// <summary>
     /// Accumulated steering forces to apply for this frame
     /// </summary>
     private Vector3 totalForce = Vector3.zero;
@@ -244,6 +249,57 @@ public abstract class Agent : MonoBehaviour
                 float disWeight = sqrPersonalSpace / (sqrDis + 0.1f);
                 Flee(other.physicsObject.Position, disWeight * weight);
             }
+        }
+    }
+
+    /// <summary>
+    /// If this Agent is predicted to collide with an obstacle,
+    /// applies a steering force to avoid colliding with the obstacle.
+    /// </summary>
+    /// <param name="obstacle">Obstacle to avoid if necessary</param>
+    /// <param name="weight">Weight (multiplied into the obstacle avoidance steering force)</param>
+    protected void AvoidObstacle(Obstacle obstacle, float weight = 1)
+    {
+        // Check if the obstacle is behind this Agent
+        Vector3 obstacleOffset = obstacle.Position - physicsObject.Position;
+        float forwardDis = Vector3.Dot(obstacleOffset, physicsObject.Direction);
+        if (Vector3.Dot(obstacleOffset, physicsObject.Direction) < 0)
+        {
+            return;
+        }
+
+        // Check if the obstacle is too far left/right
+        float rightDis = Vector3.Dot(obstacleOffset, physicsObject.Right);
+        float combinedRadius = obstacle.radius + physicsObject.radius;
+        if (Mathf.Abs(rightDis) > combinedRadius)
+        {
+            return;
+        }
+
+        // Check if the obstacle is too far forward
+        if (forwardDis > visionRange)
+        {
+            return;
+        }
+
+        // Steer away from the obstacle
+        Vector3 desiredVelocity = physicsObject.Right * Mathf.Sign(rightDis) * -maxSpeed; // SIgn function used to avoid if statements
+        float disWeight = visionRange / (forwardDis + 0.1f);
+        Vector3 steeringForce = (desiredVelocity - physicsObject.Velocity) * weight * disWeight;
+
+        totalForce += steeringForce;
+    }
+
+    /// <summary>
+    /// Applies steering forces to avoid any obstacles that this Agent is predicted to collide with.
+    /// All of the Obstacles in ObstacleManager.Instance.obstacles are checked
+    /// </summary>
+    /// <param name="weight">Weight (multiplied into the obstacle avoidance steering forces)</param>
+    protected void AvoidAllObstacles(float weight = 1)
+    {
+        foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
+        {
+            AvoidObstacle(obstacle, weight);
         }
     }
 
