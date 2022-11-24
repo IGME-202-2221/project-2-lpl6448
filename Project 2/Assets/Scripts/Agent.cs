@@ -141,7 +141,7 @@ public abstract class Agent : MonoBehaviour
         wanderAngle = Mathf.Clamp(wanderAngle, -maxWanderAngle, maxWanderAngle);
 
         // Get a position that is in the current wander direction
-        Vector3 wanderTarget = Quaternion.Euler(0, 0, wanderAngle) * physicsObject.Direction.normalized
+        Vector3 wanderTarget = Quaternion.Euler(0, wanderAngle, 0) * physicsObject.Direction.normalized
             + physicsObject.Position;
 
         // Seek toward wander position
@@ -160,8 +160,8 @@ public abstract class Agent : MonoBehaviour
 
         if (futurePosition.x < AgentManager.Instance.minPosition.x + physicsObject.radius
             || futurePosition.x > AgentManager.Instance.maxPosition.x - physicsObject.radius
-            || futurePosition.y < AgentManager.Instance.minPosition.y + physicsObject.radius
-            || futurePosition.y > AgentManager.Instance.maxPosition.y - physicsObject.radius)
+            || futurePosition.z < AgentManager.Instance.minPosition.z + physicsObject.radius
+            || futurePosition.z > AgentManager.Instance.maxPosition.z - physicsObject.radius)
         {
             Seek(Vector3.zero, weight);
         }
@@ -260,34 +260,116 @@ public abstract class Agent : MonoBehaviour
     /// <param name="weight">Weight (multiplied into the obstacle avoidance steering force)</param>
     protected void AvoidObstacle(Obstacle obstacle, float weight = 1)
     {
+        if (IsObstacleBlocking(obstacle, physicsObject.Direction, out Vector2 dis))
+        {
+            // Steer away from the obstacle
+            Vector3 desiredVelocity = physicsObject.Right * Mathf.Sign(dis.x) * -maxSpeed; // Sign function used to avoid if statements
+            float disWeight = visionRange / (dis.y + 0.1f);
+            Vector3 steeringForce = (desiredVelocity - physicsObject.Velocity) * weight * disWeight;
+
+            totalForce += steeringForce;
+        }
+    }
+
+    protected bool IsObstacleBlocking(Obstacle obstacle, Vector3 dir, out Vector2 dis)
+    {
+        dis = Vector2.zero;
+        Vector3 rightDir = new Vector3(dir.z, 0, -dir.x);
+
         // Check if the obstacle is behind this Agent
         Vector3 obstacleOffset = obstacle.Position - physicsObject.Position;
-        float forwardDis = Vector3.Dot(obstacleOffset, physicsObject.Direction);
-        if (Vector3.Dot(obstacleOffset, physicsObject.Direction) < 0)
+        float forwardDis = Vector3.Dot(obstacleOffset, dir);
+        if (forwardDis < 0)
         {
-            return;
+            return false;
         }
 
         // Check if the obstacle is too far left/right
-        float rightDis = Vector3.Dot(obstacleOffset, physicsObject.Right);
+        float rightDis = Vector3.Dot(obstacleOffset, rightDir);
         float combinedRadius = obstacle.radius + physicsObject.radius;
         if (Mathf.Abs(rightDis) > combinedRadius)
         {
-            return;
+            return false;
         }
 
         // Check if the obstacle is too far forward
         if (forwardDis > visionRange)
         {
-            return;
+            return false;
         }
 
-        // Steer away from the obstacle
-        Vector3 desiredVelocity = physicsObject.Right * Mathf.Sign(rightDis) * -maxSpeed; // SIgn function used to avoid if statements
-        float disWeight = visionRange / (forwardDis + 0.1f);
-        Vector3 steeringForce = (desiredVelocity - physicsObject.Velocity) * weight * disWeight;
+        dis = new Vector2(rightDis, forwardDis);
 
-        totalForce += steeringForce;
+        return true;
+    }
+
+    protected void AvoidAllObstaclesAndSeek(Vector3 target, float weight = 1)
+    {
+        Vector3 targetDir = (target - physicsObject.Position).normalized;
+        Vector3 rightDir = new Vector3(targetDir.z, 0, -targetDir.x);
+
+        Vector3 sumDirs = Vector3.zero;
+        float sumWeight = 0;
+        foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
+        {
+            float combinedRadius = obstacle.radius + physicsObject.radius;
+            float sqrDis = (obstacle.Position - physicsObject.Position).sqrMagnitude;
+            Vector3 obstacleDir = (obstacle.Position - physicsObject.Position).normalized;
+            Vector3 obstacleRightDir = new Vector3(obstacleDir.z, 0, -obstacleDir.x);
+            if (sqrDis > (combinedRadius - 0.0f) * (combinedRadius - 0.0f))
+            {
+                if (IsObstacleBlocking(obstacle, targetDir, out Vector2 dis))
+                {
+                    Vector3 circleCenter = (obstacle.Position + physicsObject.Position) / 2;
+                    float circleRadius = Mathf.Sqrt(sqrDis) / 2;
+
+                    // https://mathworld.wolfram.com/Circle-CircleIntersection.html
+                    float disAlongLine = (circleRadius * circleRadius - combinedRadius * combinedRadius + circleRadius * circleRadius)
+                        / circleRadius / 2;
+                    float disPerpToLine = Mathf.Sqrt(circleRadius * circleRadius - disAlongLine * disAlongLine);
+                    Vector3 intersectionPoint = circleCenter + obstacleDir * disAlongLine - obstacleRightDir * Mathf.Sign(dis.x) * disPerpToLine;
+
+                    Vector3 seekPos = intersectionPoint;
+                    Vector3 seekDir = (seekPos - physicsObject.Position).normalized;
+                    if (seekDir.sqrMagnitude < 0.1f)
+                    {
+                        seekDir = targetDir;
+                    }
+
+                    float disWeight = visionRange * visionRange / (dis.y * dis.y + 0.1f);
+                    sumDirs += seekDir * disWeight;
+                    sumWeight += disWeight;
+                }
+            }
+            else if (sqrDis < (combinedRadius - 0.0f) * (combinedRadius - 0.0f))
+            {
+                //float circleRadius = Mathf.Sqrt(sqrDis);
+                //float rightDis = Vector3.Dot(obstacle.Position - physicsObject.Position, physicsObject.Right);
+
+                //// https://mathworld.wolfram.com/Circle-CircleIntersection.html
+                //float disAlongLine = (circleRadius * circleRadius - combinedRadius * combinedRadius + circleRadius * circleRadius)
+                //    / circleRadius / 2;
+                //float disPerpToLine = Mathf.Sqrt(circleRadius * circleRadius - disAlongLine * disAlongLine);
+                //Vector3 intersectionPoint = obstacle.Position + obstacleDir * disAlongLine - obstacleRightDir * Mathf.Sign(rightDis) * disPerpToLine;
+
+                //Vector3 seekPos = intersectionPoint;
+                //Vector3 seekDir = (seekPos - physicsObject.Position).normalized;
+
+                //Seek(physicsObject.Position + seekDir.normalized, weight);
+                Seek(physicsObject.Position + (physicsObject.Position - obstacle.Position).normalized, weight);
+                return;
+            }
+        }
+
+        Vector3 seekAvoidDir = sumDirs / sumWeight;
+        if (sumWeight == 0 || Vector3.Dot(seekAvoidDir, targetDir) < 0)
+        {
+            Seek(target, weight);
+        }
+        else
+        {
+            Seek(physicsObject.Position + seekAvoidDir, weight);
+        }
     }
 
     /// <summary>

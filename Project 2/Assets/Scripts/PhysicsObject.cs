@@ -113,11 +113,11 @@ public class PhysicsObject : MonoBehaviour
         transform.position += velocity * Time.deltaTime;
 
         // Store the direction of motion and rotate the object to face it
-        if (velocity.sqrMagnitude > Mathf.Epsilon)
+        if (velocity.sqrMagnitude > 0.01f)
         {
             direction = velocity.normalized;
         }
-        transform.rotation = Quaternion.LookRotation(Vector3.back, direction);
+        transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
 
         // Zero out acceleration for the next frame
         acceleration = Vector3.zero;
@@ -181,5 +181,11 @@ public class PhysicsObject : MonoBehaviour
         {
             velocity.y *= -1;
         }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.green;
+        Gizmos.DrawWireSphere(transform.position, radius);
     }
 }

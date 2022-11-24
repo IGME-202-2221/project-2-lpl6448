@@ -33,18 +33,17 @@ public class AgentManager : MonoBehaviour
     /// Minimum (lower-left) corner of the world boundaries
     /// </summary>
     [HideInInspector]
-    public Vector2 minPosition = -Vector2.one;
+    public Vector3 minPosition = -Vector3.one;
 
     /// <summary>
     /// Maximum (upper-right) corner of the world boundaries
     /// </summary>
     [HideInInspector]
-    public Vector2 maxPosition = Vector2.one;
+    public Vector3 maxPosition = Vector3.one;
 
     /// <summary>
     /// List of Agents in the scene, used for separate forces
     /// </summary>
-    [HideInInspector]
     public List<Agent> agents = new List<Agent>();
 
     /// <summary>
