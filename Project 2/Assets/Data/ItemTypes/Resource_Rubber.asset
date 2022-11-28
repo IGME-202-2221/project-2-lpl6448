@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Resource_Rubber
   m_EditorClassIdentifier: 
   displayName: Rubber
+  carryPrefab: {fileID: 6256697929256776569, guid: 1d3faa0bf846a004a8db53858c4f71f2, type: 3}
   craftable: 0
   ingredients: []

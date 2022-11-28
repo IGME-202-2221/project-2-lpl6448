@@ -1,11 +1,18 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Represents a Task where a Station must be used by an Elf.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class UseTask : Task
 {
-    public UseTask(Station source)
+    public UseTask(Station station)
     {
-        SetSource(source);
+        SetStation(station);
     }
 
     public override float Priority => 2;
@@ -18,21 +25,21 @@ public class UseTask : Task
 
     public override bool CanTake(Elf elf)
     {
-        return source.CanUse();
+        return station.CanUse();
     }
 
     public override void InitializeTask()
     {
-        source.PrepareToUse();
+        station.PrepareToUse();
     }
 
     public override void StartTask()
     {
-        source.BeginUse();
+        station.BeginUse();
     }
 
     public override void CompleteTask()
     {
-        source.EndUse();
+        station.EndUse();
     }
 }

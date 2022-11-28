@@ -1,6 +1,13 @@
 ﻿using UnityEngine;
 using UnityEngine.InputSystem;
 
+/// <summary>
+/// Controller script (unfinished) that takes player input to rotate the camera around the map.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class CameraController : MonoBehaviour
 {
     public float lookSensitivity;

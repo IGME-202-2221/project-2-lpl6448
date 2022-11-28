@@ -1,6 +1,13 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Represents a Station where toys/items can be constructed from ingredient items.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class ToyStation : Station
 {
     private ItemType outputItem;
@@ -108,11 +115,6 @@ public class ToyStation : Station
         return pendingBuildItem != null && inputItems.Count == pendingBuildItem.ingredients.Length;
     }
 
-    public override void PrepareToUse()
-    {
-        // ?
-    }
-
     public override void BeginUse()
     {
         occupied = true;
@@ -128,7 +130,7 @@ public class ToyStation : Station
         Taskmaster.Instance.FinishBuildingItem(outputItem);
 
         GatherTask newTask = new GatherTask(outputItem);
-        newTask.SetSource(this);
+        newTask.SetStation(this);
         Taskmaster.Instance.AddTask(newTask);
     }
 
@@ -144,38 +146,6 @@ public class ToyStation : Station
             }
 
             // Each item in the inputs list must be in the ingredients for it to be a potential craft
-            List<ItemType> ingredients = new List<ItemType>(craftedItem.ingredients);
-            bool isPotentialCraft = true;
-            foreach (ItemType ingredient in inputs)
-            {
-                if (!ingredients.Remove(ingredient))
-                {
-                    isPotentialCraft = false;
-                    break;
-                }
-            }
-
-            if (isPotentialCraft)
-            {
-                craftedItems.Add(craftedItem);
-            }
-        }
-        return craftedItems;
-    }
-
-    private List<ItemType> FindValidCrafts(List<ItemType> inputs)
-    {
-        List<ItemType> craftedItems = new List<ItemType>();
-        foreach (ItemType craftedItem in Taskmaster.Instance.itemsBuilding)
-        {
-            // If there are more or fewer inputs than ingredients, this cannot be a valid craft
-            if (inputs.Count != craftedItem.ingredients.Length)
-            {
-                continue;
-            }
-
-            // Each item in the inputs list must be in the ingredients for it to be a potential craft,
-            // and all ingredients must be fulfilled for it to be a valid craft
             List<ItemType> ingredients = new List<ItemType>(craftedItem.ingredients);
             bool isPotentialCraft = true;
             foreach (ItemType ingredient in inputs)

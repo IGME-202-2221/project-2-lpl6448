@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: CarFrame
   m_EditorClassIdentifier: 
   displayName: Frame
+  carryPrefab: {fileID: 4115007938533040973, guid: cbf014c6fbef69540b84b35fd91a860c, type: 3}
   craftable: 1
   ingredients:
   - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}

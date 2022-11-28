@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: CarWheels
   m_EditorClassIdentifier: 
   displayName: Wheels
+  carryPrefab: {fileID: 3208032297636058082, guid: 899a63ff17fb1424f8fc60b3d73908b5, type: 3}
   craftable: 1
   ingredients:
   - {fileID: 11400000, guid: 0cf448b21370d6346b92a48d12706f5d, type: 2}

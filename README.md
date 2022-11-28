@@ -22,15 +22,20 @@ This will be a Christmas-themed game where help Santa's elves meet their quotas.
 ## Elf
 
 The elf will construct parts and toys and carry them to different stations in the workshop.
+There are three kinds of tasks that elves can take:
+- Gather - Gather an item from a particular station and choose a destination for this item.
+- Deliver - Carry an item to a particular destination station.
+- Use - Use a particular station for a certain amount of time.
+These tasks are stored separately from the elf's states, but they influence how the elf behaves and where the elf goes.
 
-### Looking for Work
+### Waiting for Task
 
-**Objective:** Approach a station with a task that needs completing.
+**Objective:** Wander around the map until a task becomes available.
 
 #### Steering Behaviors
 
 - Behaviors
-   - Seek chosen station (station will be chosen in the transition to this state)
+   - Wander around the map.
    - Flee from snowmen within a certain radius
    - Stay within the workshop bounds
 - Obstacles - Stations (other than the chosen station)
@@ -41,24 +46,9 @@ The elf will construct parts and toys and carry them to different stations in th
 - When this elf delivers a part/toy to a station
 - When this elf is no longer frozen
    
-### Working
+### Walking to Task
 
-**Objective:** Stay at the current station for a certain amount of time.
-
-#### Steering Behaviors
-
-- Behaviors
-   - Play animation to make part/toy
-- Obstacles - None (because the elf is stationary)
-- Separation - None
-   
-#### State Transistions
-
-- When this elf approaches a station (if looking for work)
-   
-### Carrying
-
-**Objective:** Deliver a part/toy to a particular station.
+**Objective:** Walk to the station required by the current task.
 
 #### Steering Behaviors
 
@@ -73,6 +63,21 @@ The elf will construct parts and toys and carry them to different stations in th
 
 - When this elf finishes work at a station
 - When this elf touches a dropped part/toy
+   
+### Processing Task
+
+**Objective:** Stay at the current station for a certain amount of time.
+
+#### Steering Behaviors
+
+- Behaviors
+   - If necessary, play any animations to make the part/toy
+- Obstacles - None (because the elf is stationary)
+- Separation - None
+   
+#### State Transistions
+
+- When this elf approaches a station (if looking for work)
    
 ### Frozen
 
@@ -138,7 +143,6 @@ The snowman will wander around the map, attempting to freeze elves by touching t
 
 - I added two more states to the elf (Working and Frozen). These states do not have steering forces because they effectively freeze the elf.
 - I will make the game in 3D (using a mostly topdown perspective) and will let the player rotate the camera around the workshop.
-- I will make the elves and toys/parts out of voxels to fit the 3D style.
 
 ## Known Issues
 

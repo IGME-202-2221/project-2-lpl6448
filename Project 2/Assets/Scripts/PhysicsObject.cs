@@ -46,6 +46,11 @@ public class PhysicsObject : MonoBehaviour
     public float radius = 1;
 
     /// <summary>
+    /// Linear interpolation factor used to smooth this object's rotation
+    /// </summary>
+    public float rotationLerp = 0.99f;
+
+    /// <summary>
     /// Current velocity of this object
     /// </summary>
     private Vector3 velocity;
@@ -81,11 +86,23 @@ public class PhysicsObject : MonoBehaviour
     public Vector3 Position => transform.position;
 
     /// <summary>
+    /// Manually sets this object's direction (which is still subject to change
+    /// next frame if this object is moving)
+    /// </summary>
+    /// <param name="direction">New Vector3 direction vector of this object</param>
+    public void SetDirection(Vector3 direction)
+    {
+        this.direction = direction;
+    }
+
+    /// <summary>
     /// On game start, initialize the cameraSize to the x and y extents of the Camera view
     /// </summary>
     private void Start()
     {
-        direction = Random.insideUnitCircle.normalized;
+        float rad = Random.value * Mathf.PI * 2;
+        direction = new Vector3(Mathf.Cos(rad), 0, Mathf.Sin(rad));
+        transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
     }
 
     /// <summary>
@@ -113,11 +130,11 @@ public class PhysicsObject : MonoBehaviour
         transform.position += velocity * Time.deltaTime;
 
         // Store the direction of motion and rotate the object to face it
-        if (velocity.sqrMagnitude > 0.01f)
+        if (velocity.sqrMagnitude > 0.1f)
         {
             direction = velocity.normalized;
         }
-        transform.rotation = Quaternion.LookRotation(direction, Vector3.up);
+        transform.rotation = Quaternion.Lerp(transform.rotation, Quaternion.LookRotation(direction, Vector3.up), 1 - Mathf.Pow(1 - rotationLerp, Time.deltaTime));
 
         // Zero out acceleration for the next frame
         acceleration = Vector3.zero;
@@ -183,6 +200,9 @@ public class PhysicsObject : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// When selected, draws a green wire sphere gizmo to represent this object's bounding circle
+    /// </summary>
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.green;

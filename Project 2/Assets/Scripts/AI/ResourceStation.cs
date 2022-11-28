@@ -1,5 +1,12 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Represents a Station that provides an infinite supply of a particular ingredient item.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class ResourceStation : Station
 {
     public ItemType outputItem;

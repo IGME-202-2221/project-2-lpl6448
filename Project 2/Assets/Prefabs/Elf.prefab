@@ -219,6 +219,7 @@ MonoBehaviour:
   useFriction: 1
   frictionCoefficient: 1
   radius: 0.8
+  rotationLerp: 0.9995
 --- !u!114 &6189423341889154692
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -236,7 +237,7 @@ MonoBehaviour:
   maxForce: 5
   maxWanderAngle: 45
   maxWanderChangePerSecond: 10
-  personalSpace: 1.5
+  personalSpace: 1.8
   visionRange: 6
   animator: {fileID: 6735957097118427708}
   carryItemAnchor: {fileID: 3350374638276153368}

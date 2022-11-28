@@ -1,19 +1,27 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Represents an instruction for an Elf, requiring that the Elf arrive at a particular Station
+/// and do a particular action at that station.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public abstract class Task
 {
-    public Station source { get; private set; }
+    public Station station { get; private set; }
 
     public Elf assignee { get; private set; }
 
     public abstract float Priority { get; }
 
-    public void SetSource(Station source)
+    public void SetStation(Station station)
     {
-        this.source = source;
+        this.station = station;
     }
 
-    public virtual Station GetSourceForElf(Elf elf) { return source; }
+    public virtual Station GetSourceForElf(Elf elf) { return station; }
 
     public abstract Vector3 GetStationCenter(Station station);
 
@@ -26,9 +34,9 @@ public abstract class Task
         if (CanTake(elf))
         {
             assignee = elf;
-            if (source == null)
+            if (station == null)
             {
-                source = GetSourceForElf(elf);
+                station = GetSourceForElf(elf);
             }
             return true;
         }

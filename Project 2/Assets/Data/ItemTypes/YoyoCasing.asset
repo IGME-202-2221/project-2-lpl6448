@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: YoyoCasing
   m_EditorClassIdentifier: 
   displayName: Yoyo Casing
+  carryPrefab: {fileID: 3329972655032519191, guid: 1c130a0b29da91d4ba9c80fab8568c5a, type: 3}
   craftable: 1
   ingredients:
   - {fileID: 11400000, guid: 0cf448b21370d6346b92a48d12706f5d, type: 2}

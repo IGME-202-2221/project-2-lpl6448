@@ -32,13 +32,11 @@ public class AgentManager : MonoBehaviour
     /// <summary>
     /// Minimum (lower-left) corner of the world boundaries
     /// </summary>
-    [HideInInspector]
     public Vector3 minPosition = -Vector3.one;
 
     /// <summary>
     /// Maximum (upper-right) corner of the world boundaries
     /// </summary>
-    [HideInInspector]
     public Vector3 maxPosition = Vector3.one;
 
     /// <summary>
@@ -56,15 +54,6 @@ public class AgentManager : MonoBehaviour
             Instance = this;
         }
 
-        Camera cam = Camera.main;
-        if (cam != null)
-        {
-            Vector2 camPosition = cam.transform.position;
-            Vector2 camExtents = new Vector2(cam.orthographicSize * cam.aspect, cam.orthographicSize) - Vector2.one * edgePadding;
-            minPosition = camPosition - camExtents;
-            maxPosition = camPosition + camExtents;
-        }
-
         for (int i = 0; i < numAgents; i++)
         {
             agents.Add(Spawn(agentPrefab));
@@ -79,10 +68,20 @@ public class AgentManager : MonoBehaviour
     /// <returns>The Agent (generic) that was spawned</returns>
     private T Spawn<T>(T prefab) where T : Agent
     {
-        Vector2 pos = new Vector2(
+        Vector3 pos = new Vector3(
             Random.Range(minPosition.x, maxPosition.x),
-            Random.Range(minPosition.y, maxPosition.y));
+            0,
+            Random.Range(minPosition.z, maxPosition.z));
 
-        return Instantiate(prefab, pos, Quaternion.identity);
+        return Instantiate(prefab, pos, Quaternion.identity, transform);
+    }
+
+    /// <summary>
+    /// When selected, draws a yellow wire cube to represent the world bounds
+    /// </summary>
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube((minPosition + maxPosition) / 2, maxPosition - minPosition);
     }
 }

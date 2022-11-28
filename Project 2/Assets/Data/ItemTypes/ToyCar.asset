@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: ToyCar
   m_EditorClassIdentifier: 
   displayName: Toy Car
+  carryPrefab: {fileID: 5159371664731910661, guid: b080f19bb87d73a41b36e20af4e7501e, type: 3}
   craftable: 1
   ingredients:
   - {fileID: 11400000, guid: eb320d74b1f63bd429d6db9f27345adf, type: 2}

@@ -1,5 +1,13 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Represents an elf agent that moves around the map and completes task. It also includes visual
+/// elements like an animator and the reference to the item being carried.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class Elf : Agent
 {
     public enum ElfState
@@ -18,6 +26,8 @@ public class Elf : Agent
     public ElfState state;
 
     public float maxSpeedWhenCarrying = 3;
+
+    public float maxSpeedWhenWandering = 4;
 
     public float maxSpeedWhenNotCarrying = 5;
 
@@ -49,7 +59,11 @@ public class Elf : Agent
 
     protected override void CalculateSteeringForces()
     {
-        if (carryingItem != null)
+        if (state == ElfState.WaitingForTask)
+        {
+            maxSpeed = maxSpeedWhenWandering;
+        }
+        else if (carryingItem != null)
         {
             maxSpeed = maxSpeedWhenCarrying;
         }
@@ -61,19 +75,25 @@ public class Elf : Agent
         switch (state)
         {
             case ElfState.WaitingForTask:
-                // Wander
-                Separate(AgentManager.Instance.agents, 3);
+                Wander();
+                AvoidAllObstacles(2);
+                SeparatePredictive(AgentManager.Instance.agents, 5);
 
                 TakeNewTask();
                 break;
             case ElfState.WalkingToTask:
-                Vector3 stationCenter = activeTask.GetStationCenter(activeTask.source);
-                float stationRadius = activeTask.GetStationRadius(activeTask.source);
-                AvoidAllObstaclesAndSeek(stationCenter);
-                Separate(AgentManager.Instance.agents, 3);
-
+                Vector3 stationCenter = activeTask.GetStationCenter(activeTask.station);
+                float stationRadius = activeTask.GetStationRadius(activeTask.station);
                 float combinedRadius = stationRadius + physicsObject.radius;
-                if ((physicsObject.Position - stationCenter).sqrMagnitude <= combinedRadius * combinedRadius)
+                Vector3 seekDir = (stationCenter - physicsObject.Position).normalized;
+                SeparatePredictive(AgentManager.Instance.agents, seekDir, 2);
+
+                float disSqr = (physicsObject.Position - stationCenter).sqrMagnitude;
+                if (disSqr > combinedRadius * combinedRadius)
+                {
+                    AvoidAllObstaclesAndSeek(stationCenter - seekDir * combinedRadius, 2);
+                }
+                else
                 {
                     activeTask.StartTask();
 
@@ -82,6 +102,12 @@ public class Elf : Agent
                 }
                 break;
             case ElfState.ProcessingTask:
+                // Face the station's position if possible
+                if (Vector3.SqrMagnitude(activeTask.station.transform.position - physicsObject.Position) > 0.1f)
+                {
+                    physicsObject.SetDirection((activeTask.station.transform.position - physicsObject.Position).normalized);
+                }
+
                 if (Time.time - stateStartTime >= activeTask.GetProcessingTime())
                 {
                     activeTask.CompleteTask();
@@ -95,7 +121,7 @@ public class Elf : Agent
                 break;
         }
 
-        //StayInBounds();
+        StayInBounds();
 
         animator.SetFloat("WalkSpeed", physicsObject.Velocity.magnitude);
         animator.SetBool("Carrying", carryingItem != null);
@@ -110,46 +136,6 @@ public class Elf : Agent
 
             state = ElfState.WalkingToTask;
             stateStartTime = Time.time;
-        }
-    }
-
-    private void OnDrawGizmos()
-    {
-        Gizmos.color = Color.yellow;
-
-        if (state == ElfState.WalkingToTask)
-        {
-            Vector3 target = activeTask.GetStationCenter(activeTask.source);
-            Vector3 targetDir = (target - physicsObject.Position).normalized;
-            Vector3 rightDir = new Vector3(targetDir.z, 0, -targetDir.x);
-
-            foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
-            {
-                float combinedRadius = obstacle.radius + physicsObject.radius;
-                float sqrDis = (obstacle.Position - physicsObject.Position).sqrMagnitude;
-                if (sqrDis > (combinedRadius - 0.0f) * (combinedRadius - 0.0f))
-                {
-                    Vector3 obstacleDir = (obstacle.Position - physicsObject.Position).normalized;
-                    Vector3 obstacleRightDir = new Vector3(obstacleDir.z, 0, -obstacleDir.x);
-                    if (IsObstacleBlocking(obstacle, targetDir, out Vector2 dis))
-                    {
-                        Vector3 circleCenter = (obstacle.Position + physicsObject.Position) / 2;
-                        float circleRadius = Mathf.Sqrt(sqrDis) / 2;
-
-                        // https://mathworld.wolfram.com/Circle-CircleIntersection.html
-                        float disAlongLine = (circleRadius * circleRadius - combinedRadius * combinedRadius + circleRadius * circleRadius)
-                            / circleRadius / 2;
-                        float disPerpToLine = Mathf.Sqrt(circleRadius * circleRadius - disAlongLine * disAlongLine);
-                        Vector3 intersectionPoint = circleCenter + obstacleDir * disAlongLine - obstacleRightDir * Mathf.Sign(dis.x) * disPerpToLine;
-
-                        Gizmos.DrawWireSphere(circleCenter, circleRadius);
-                        Gizmos.DrawWireSphere(physicsObject.Position, physicsObject.radius);
-                        Gizmos.DrawWireSphere(obstacle.Position, obstacle.radius);
-                        Gizmos.DrawSphere(intersectionPoint, 0.2f);
-                        Gizmos.DrawLine(physicsObject.Position, intersectionPoint);
-                    }
-                }
-            }
         }
     }
 }

@@ -1,6 +1,16 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Manager class that contains information about current items being build and current tasks
+/// and decides which Tasks each Elf will take. The algorithm that decides which items will be
+/// built is currently simple and prone to deadlock, but it may be improved by allowing user
+/// interaction in the future.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class Taskmaster : MonoBehaviour
 {
     public static Taskmaster Instance;
@@ -67,20 +77,10 @@ public class Taskmaster : MonoBehaviour
             InitItem(item);
         }
 
-        //for (int i = 0; i < WorldManager.Instance.stations.Count; i++)
         while (itemsToBuild.Count > 0)
         {
-            //Station station = WorldManager.Instance.stations[i];
-            //if (station is ToyStation)
-            {
-                ItemType newItem = itemsToBuild.Dequeue();
-                AddItemToCurrentlyBuilding(newItem);
-
-                //if (initItems.Contains(newItem))
-                //{
-                //    i--;
-                //}
-            }
+            ItemType newItem = itemsToBuild.Dequeue();
+            AddItemToCurrentlyBuilding(newItem);
         }
     }
 

@@ -1,14 +1,21 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Represents a Task where an item must be delivered to a particular Station.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public class DeliverTask : Task
 {
-    public ItemType sourceItem;
+    public ItemType deliverItem;
 
-    public DeliverTask(ItemType sourceItem, Station source)
+    public DeliverTask(ItemType deliverItem, Station station)
     {
-        this.sourceItem = sourceItem;
-        this.SetSource(source);
+        this.deliverItem = deliverItem;
+        SetStation(station);
     }
 
     public override float Priority => 1;
@@ -21,7 +28,7 @@ public class DeliverTask : Task
 
     public override bool CanTake(Elf elf)
     {
-        return elf.carryingItem == sourceItem && GetSourceForElf(elf) != null;
+        return elf.carryingItem == deliverItem && GetSourceForElf(elf) != null;
     }
 
     public override void InitializeTask() { }
@@ -30,7 +37,7 @@ public class DeliverTask : Task
 
     public override void CompleteTask()
     {
-        source.ReceiveItem(sourceItem);
+        station.ReceiveItem(deliverItem);
 
         assignee.DropItem();
     }

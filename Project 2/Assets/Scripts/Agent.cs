@@ -2,8 +2,8 @@
 using System.Collections.Generic;
 
 /// <summary>
-/// Parent class for all autonomous agents, which contains the ability to seek
-/// or flee from different objects, depending on the subclass's implementation.
+/// Parent class for all autonomous agents, which contains various behaviors,
+/// utilized depending on the subclass's implementation.
 /// 
 /// Author: Luke Lepkowski (lpl6448@rit.edu)
 /// </summary>
@@ -100,6 +100,30 @@ public abstract class Agent : MonoBehaviour
 
         // Set desired velocity's magnitude
         desiredVelocity = desiredVelocity.normalized * maxSpeed;
+
+        // Calculate steering force
+        Vector3 seekingForce = desiredVelocity - physicsObject.Velocity;
+
+        // Apply steering force
+        totalForce += seekingForce * weight;
+    }
+
+    /// <summary>
+    /// Applies an arrive steering force to the targetPos, with the specified weight.
+    /// The Agent will seek the target and then will slow down once the target is near.
+    /// </summary>
+    /// <param name="targetPos">Vector3 that this Agent will seek towards</param>
+    /// <param name="slowRadius">Distance from the target when this Agent will begin to slow down</param>
+    /// <param name="weight">Weight (multiplied into the arrive steering force)</param>
+    protected void Arrive(Vector3 targetPos, float slowRadius, float weight = 1)
+    {
+        // Calculate desired velocity
+        Vector3 desiredVelocity = targetPos - physicsObject.Position;
+
+        // Set desired velocity's magnitude
+        float disSqr = Vector3.SqrMagnitude(desiredVelocity);
+        float desiredSpeed = disSqr < slowRadius * slowRadius ? Mathf.Lerp(maxSpeed, 0, Mathf.Sqrt(disSqr) / slowRadius) : maxSpeed;
+        desiredVelocity = desiredVelocity.normalized * desiredSpeed;
 
         // Calculate steering force
         Vector3 seekingForce = desiredVelocity - physicsObject.Velocity;
@@ -253,6 +277,54 @@ public abstract class Agent : MonoBehaviour
     }
 
     /// <summary>
+    /// Applies a predictive separate steering force to avoid collision with other Agents.
+    /// This Agent's position is extrapolated until its closest approach to other Agents, and this extrapolated
+    /// position is used to find a more effective force direction.
+    /// </summary>
+    /// <typeparam name="T">Type of Agent in the agents list</typeparam>
+    /// <param name="agents">List of Agents to avoid</param>
+    /// <param name="predictionDir">Direction that this Agent is assumed to be moving
+    ///                             (used to avoid the irregularity of the PhysicsObject's Direction vector)</param>
+    /// <param name="weight">Weight (multiplied into the predictive separate steering force)</param>
+    protected void SeparatePredictive<T>(List<T> agents, Vector3 predictionDir, float weight = 1) where T : Agent
+    {
+        foreach (T other in agents)
+        {
+            float sqrDis = Vector3.SqrMagnitude(physicsObject.Position - other.physicsObject.Position);
+
+            // If other is this agent, skip
+            if (sqrDis < float.Epsilon)
+            {
+                continue;
+            }
+
+            if (sqrDis < personalSpace * personalSpace)
+            {
+                // Get closest point on the segment from the other agent's position (to predict where the
+                // Agents may be when they are colliding
+                float disToCollision = Mathf.Max(0, Vector3.Dot(other.physicsObject.Position - physicsObject.Position, predictionDir));
+                Vector3 collisionPos = physicsObject.Position + predictionDir * disToCollision;
+
+                float disWeight = personalSpace * personalSpace / (sqrDis + 0.1f);
+                Flee(physicsObject.Position - collisionPos + other.physicsObject.Position, disWeight * weight);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Applies a predictive separate steering force to avoid collision with other Agents.
+    /// This Agent's position is extrapolated until its closest approach to other Agents, and this extrapolated
+    /// position is used to find a more effective force direction.
+    /// </summary>
+    /// <typeparam name="T">Type of Agent in the agents list</typeparam>
+    /// <param name="agents">List of Agents to avoid</param>
+    /// <param name="weight">Weight (multiplied into the predictive separate steering force)</param>
+    protected void SeparatePredictive<T>(List<T> agents, float weight = 1) where T : Agent
+    {
+        SeparatePredictive(agents, physicsObject.Direction, weight);
+    }
+
+    /// <summary>
     /// If this Agent is predicted to collide with an obstacle,
     /// applies a steering force to avoid colliding with the obstacle.
     /// </summary>
@@ -271,7 +343,91 @@ public abstract class Agent : MonoBehaviour
         }
     }
 
-    protected bool IsObstacleBlocking(Obstacle obstacle, Vector3 dir, out Vector2 dis)
+    /// <summary>
+    /// Applies steering forces to avoid any obstacles that this Agent is predicted to collide with.
+    /// All of the Obstacles in ObstacleManager.Instance.obstacles are checked.
+    /// </summary>
+    /// <param name="weight">Weight (multiplied into the obstacle avoidance steering forces)</param>
+    protected void AvoidAllObstacles(float weight = 1)
+    {
+        foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
+        {
+            AvoidObstacle(obstacle, weight);
+        }
+    }
+
+    /// <summary>
+    /// Applies steering forces to avoid any obstacles that this Agent is predicted to collide with,
+    /// applying adjusted Seek/Flee forces to account for nearby Obstacles.
+    /// All of the Obstacles in ObstacleManager.Instance.obstacles are checked.
+    /// An additional target is provided so that an optimal force direction can be determined,
+    /// using tangents of the Obstacle and Agent bounding circles.
+    /// </summary>
+    /// <param name="target">Target position that this Agent will aim to seek</param>
+    /// <param name="weight">Weight (multiplied into the obstacle avoidance steering forces)</param>
+    protected void AvoidAllObstaclesAndSeek(Vector3 target, float weight = 1)
+    {
+        float targetDis = Vector3.Distance(target, physicsObject.Position);
+        Vector3 targetDir = (target - physicsObject.Position) / targetDis;
+
+        bool obstacleBlocked = false;
+        foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
+        {
+            float combinedRadius = obstacle.radius + physicsObject.radius;
+            float sqrDis = (obstacle.Position - physicsObject.Position).sqrMagnitude;
+            Vector3 obstacleDir = (obstacle.Position - physicsObject.Position).normalized;
+            Vector3 obstacleRightDir = new Vector3(obstacleDir.z, 0, -obstacleDir.x);
+            float targetForwardDis = Vector3.Dot(obstacleDir, target - physicsObject.Position);
+
+            if (sqrDis > combinedRadius * combinedRadius)
+            {
+                if (IsObstacleBlocking(obstacle, targetDir, out Vector2 dis) && dis.y - obstacle.radius < targetDis)
+                {
+                    // If this obstacle is in the path of this Agent, calculate the optimal path around the obstacle
+                    // using a tangent line between this Agent's circle and the obstacle's circle
+                    obstacleBlocked = true;
+                    Vector3 circleCenter = (obstacle.Position + physicsObject.Position) / 2;
+                    float circleRadius = Mathf.Sqrt(sqrDis) / 2;
+
+                    // Circle intersection from https://mathworld.wolfram.com/Circle-CircleIntersection.html
+                    float disAlongLine = (circleRadius * circleRadius - combinedRadius * combinedRadius + circleRadius * circleRadius)
+                        / circleRadius / 2;
+                    float disPerpToLine = Mathf.Sqrt(circleRadius * circleRadius - disAlongLine * disAlongLine);
+                    Vector3 intersectionPoint = circleCenter + obstacleDir * disAlongLine - obstacleRightDir * Mathf.Sign(dis.x) * disPerpToLine;
+
+                    Vector3 seekPos = intersectionPoint;
+                    Vector3 seekDir = (seekPos - physicsObject.Position).normalized;
+                    if (seekDir.sqrMagnitude < 0.1f)
+                    {
+                        seekDir = targetDir;
+                    }
+
+                    float disWeight = visionRange * visionRange / (dis.y * dis.y + 0.1f);
+                    Seek(physicsObject.Position + seekDir, weight * disWeight);
+                }
+            }
+            else
+            {
+                // If this Agent is inside of any obstacle, prioritize leaving the obstacle
+                Flee(obstacle.Position, weight);
+            }
+        }
+
+        if (!obstacleBlocked)
+        {
+            Seek(target, weight);
+        }
+    }
+
+    /// <summary>
+    /// Utility method that determines whether an Obstacle is blocking this Agent's path in the
+    /// given direction or not
+    /// </summary>
+    /// <param name="obstacle">Obstable that may be blocking this Agent's path</param>
+    /// <param name="dir">Direction this Agent is assumed to be moving (used to avoid the irregularity of the PhysicsObject's Direction vector)</param>
+    /// <param name="dis">Output Vector2 containing the signed distances to the right (x) and forward (y)</param>
+    /// <returns>Whether the Obstacle is blocking this Agent's path</returns>
+    private bool IsObstacleBlocking(Obstacle obstacle, Vector3 dir, out Vector2 dis)
     {
         dis = Vector2.zero;
         Vector3 rightDir = new Vector3(dir.z, 0, -dir.x);
@@ -303,90 +459,8 @@ public abstract class Agent : MonoBehaviour
         return true;
     }
 
-    protected void AvoidAllObstaclesAndSeek(Vector3 target, float weight = 1)
-    {
-        Vector3 targetDir = (target - physicsObject.Position).normalized;
-        Vector3 rightDir = new Vector3(targetDir.z, 0, -targetDir.x);
-
-        Vector3 sumDirs = Vector3.zero;
-        float sumWeight = 0;
-        foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
-        {
-            float combinedRadius = obstacle.radius + physicsObject.radius;
-            float sqrDis = (obstacle.Position - physicsObject.Position).sqrMagnitude;
-            Vector3 obstacleDir = (obstacle.Position - physicsObject.Position).normalized;
-            Vector3 obstacleRightDir = new Vector3(obstacleDir.z, 0, -obstacleDir.x);
-            if (sqrDis > (combinedRadius - 0.0f) * (combinedRadius - 0.0f))
-            {
-                if (IsObstacleBlocking(obstacle, targetDir, out Vector2 dis))
-                {
-                    Vector3 circleCenter = (obstacle.Position + physicsObject.Position) / 2;
-                    float circleRadius = Mathf.Sqrt(sqrDis) / 2;
-
-                    // https://mathworld.wolfram.com/Circle-CircleIntersection.html
-                    float disAlongLine = (circleRadius * circleRadius - combinedRadius * combinedRadius + circleRadius * circleRadius)
-                        / circleRadius / 2;
-                    float disPerpToLine = Mathf.Sqrt(circleRadius * circleRadius - disAlongLine * disAlongLine);
-                    Vector3 intersectionPoint = circleCenter + obstacleDir * disAlongLine - obstacleRightDir * Mathf.Sign(dis.x) * disPerpToLine;
-
-                    Vector3 seekPos = intersectionPoint;
-                    Vector3 seekDir = (seekPos - physicsObject.Position).normalized;
-                    if (seekDir.sqrMagnitude < 0.1f)
-                    {
-                        seekDir = targetDir;
-                    }
-
-                    float disWeight = visionRange * visionRange / (dis.y * dis.y + 0.1f);
-                    sumDirs += seekDir * disWeight;
-                    sumWeight += disWeight;
-                }
-            }
-            else if (sqrDis < (combinedRadius - 0.0f) * (combinedRadius - 0.0f))
-            {
-                //float circleRadius = Mathf.Sqrt(sqrDis);
-                //float rightDis = Vector3.Dot(obstacle.Position - physicsObject.Position, physicsObject.Right);
-
-                //// https://mathworld.wolfram.com/Circle-CircleIntersection.html
-                //float disAlongLine = (circleRadius * circleRadius - combinedRadius * combinedRadius + circleRadius * circleRadius)
-                //    / circleRadius / 2;
-                //float disPerpToLine = Mathf.Sqrt(circleRadius * circleRadius - disAlongLine * disAlongLine);
-                //Vector3 intersectionPoint = obstacle.Position + obstacleDir * disAlongLine - obstacleRightDir * Mathf.Sign(rightDis) * disPerpToLine;
-
-                //Vector3 seekPos = intersectionPoint;
-                //Vector3 seekDir = (seekPos - physicsObject.Position).normalized;
-
-                //Seek(physicsObject.Position + seekDir.normalized, weight);
-                Seek(physicsObject.Position + (physicsObject.Position - obstacle.Position).normalized, weight);
-                return;
-            }
-        }
-
-        Vector3 seekAvoidDir = sumDirs / sumWeight;
-        if (sumWeight == 0 || Vector3.Dot(seekAvoidDir, targetDir) < 0)
-        {
-            Seek(target, weight);
-        }
-        else
-        {
-            Seek(physicsObject.Position + seekAvoidDir, weight);
-        }
-    }
-
     /// <summary>
-    /// Applies steering forces to avoid any obstacles that this Agent is predicted to collide with.
-    /// All of the Obstacles in ObstacleManager.Instance.obstacles are checked
-    /// </summary>
-    /// <param name="weight">Weight (multiplied into the obstacle avoidance steering forces)</param>
-    protected void AvoidAllObstacles(float weight = 1)
-    {
-        foreach (Obstacle obstacle in ObstacleManager.Instance.obstacles)
-        {
-            AvoidObstacle(obstacle, weight);
-        }
-    }
-
-    /// <summary>
-    /// When selected, draw gizmos to show the PhysicsObject's radius (red)
+    /// When selected, draws gizmos to show the PhysicsObject's radius (red)
     /// and the personalSpace radius (green)
     /// </summary>
     private void OnDrawGizmosSelected()

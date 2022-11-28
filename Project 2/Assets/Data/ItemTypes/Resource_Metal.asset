@@ -13,5 +13,6 @@ MonoBehaviour:
   m_Name: Resource_Metal
   m_EditorClassIdentifier: 
   displayName: Metal
+  carryPrefab: {fileID: 7074555548554611608, guid: db3aa647febe152489000d285e6bbeb3, type: 3}
   craftable: 0
   ingredients: []

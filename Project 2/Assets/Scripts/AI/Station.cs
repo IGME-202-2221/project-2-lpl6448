@@ -1,5 +1,13 @@
 ﻿using UnityEngine;
 
+/// <summary>
+/// Represents a target for Elves that can either receive/take items from Elves,
+/// provide items to Elves, and be used by Elves.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// 
+/// DOCUMENTATION UNFINISHED
+/// </summary>
 public abstract class Station : MonoBehaviour
 {
     public Transform elfItemCenter;
