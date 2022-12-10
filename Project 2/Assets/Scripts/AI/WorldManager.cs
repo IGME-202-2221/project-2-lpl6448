@@ -13,6 +13,10 @@ public class WorldManager : MonoBehaviour
     /// </summary>
     public static WorldManager Instance;
 
+    public Vector3 elfWorldExtents;
+
+    public Vector3 snowmanWorldExtents;
+
     /// <summary>
     /// List of Stations in the world, used to select viable destinations for items
     /// </summary>
@@ -27,5 +31,15 @@ public class WorldManager : MonoBehaviour
         {
             Instance = this;
         }
+    }
+
+    /// <summary>
+    /// When selected, draws two yellow wire cubes to represent the world bounds
+    /// </summary>
+    private void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireCube(Vector3.zero, elfWorldExtents * 2);
+        Gizmos.DrawWireCube(Vector3.zero, snowmanWorldExtents * 2);
     }
 }

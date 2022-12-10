@@ -13,7 +13,10 @@ MonoBehaviour:
   m_Name: String
   m_EditorClassIdentifier: 
   displayName: String
-  carryPrefab: {fileID: 964385894464080091, guid: 724032c75bdc84a4eb6cff691c40fabc, type: 3}
+  objectPrefab: {fileID: 337538562644093884, guid: 724032c75bdc84a4eb6cff691c40fabc, type: 3}
   craftable: 1
   ingredients:
   - {fileID: 11400000, guid: 9b006388a8ef93846b73752558cbc914, type: 2}
+  - {fileID: 11400000, guid: 9b006388a8ef93846b73752558cbc914, type: 2}
+  - {fileID: 11400000, guid: 9b006388a8ef93846b73752558cbc914, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}

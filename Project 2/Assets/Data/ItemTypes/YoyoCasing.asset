@@ -12,11 +12,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 090bb87894d6a3a449218d132de6b8f8, type: 3}
   m_Name: YoyoCasing
   m_EditorClassIdentifier: 
-  displayName: Yoyo Casing
-  carryPrefab: {fileID: 3329972655032519191, guid: 1c130a0b29da91d4ba9c80fab8568c5a, type: 3}
+  displayName: Casing
+  objectPrefab: {fileID: 4823621826956546793, guid: c427f70754e912542bee3ba724dddde5, type: 3}
   craftable: 1
   ingredients:
-  - {fileID: 11400000, guid: 0cf448b21370d6346b92a48d12706f5d, type: 2}
-  - {fileID: 11400000, guid: 0cf448b21370d6346b92a48d12706f5d, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
+  - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
   - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}
   - {fileID: 11400000, guid: 35c6bb50bc1df0e44957bce74604411a, type: 2}

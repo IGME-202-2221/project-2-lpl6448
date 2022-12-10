@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
 /// Represents a type of craftable or gatherable item in the game and includes
@@ -15,9 +16,14 @@ public class ItemType : ScriptableObject
     public string displayName;
 
     /// <summary>
+    /// Sprite that will be displayed in the game UI for this item
+    /// </summary>
+    public Sprite icon;
+
+    /// <summary>
     /// Prefab that is instantiated as a child of the Elf's CarryAnchor object to show that the Elf is carrying this item
     /// </summary>
-    public GameObject carryPrefab;
+    public ItemObject objectPrefab;
 
     /// <summary>
     /// Whether this item has a crafting recipe or not
@@ -25,7 +31,7 @@ public class ItemType : ScriptableObject
     public bool craftable;
 
     /// <summary>
-    /// Array of ItemTypes that are required to craft this item. (Repeat items mean that multiple of a given ItemType are needed.)
+    /// List of ItemTypes that are required to craft this item. (Repeat items mean that multiple of a given ItemType are needed.)
     /// </summary>
-    public ItemType[] ingredients;
+    public List<ItemType> ingredients;
 }

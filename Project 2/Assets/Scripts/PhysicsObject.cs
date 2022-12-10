@@ -16,11 +16,6 @@ public class PhysicsObject : MonoBehaviour
     public float mass = 1;
 
     /// <summary>
-    /// Whether this object should bounce off of the "walls" of the map or not
-    /// </summary>
-    public bool bounceOffWalls = false;
-
-    /// <summary>
     /// Whether this object is affected by gravity or not
     /// </summary>
     public bool useGravity = false;
@@ -138,12 +133,6 @@ public class PhysicsObject : MonoBehaviour
 
         // Zero out acceleration for the next frame
         acceleration = Vector3.zero;
-
-        // Bounce if necessary
-        if (bounceOffWalls)
-        {
-            Bounce();
-        }
     }
 
     /// <summary>
@@ -171,33 +160,6 @@ public class PhysicsObject : MonoBehaviour
     private void ApplyGravity(Vector3 gravity)
     {
         acceleration += gravity;
-    }
-
-    /// <summary>
-    /// Checks this object against all four edges of the screen and changes the velocity if it
-    /// is outside the bounds and continuing to move outside of bounds.
-    /// This function is implemented as it was in this week's demo and therefore checks if the
-    /// center of the object is outside of the screen.
-    /// </summary>
-    private void Bounce()
-    {
-        // If offscreen and continuing to move offscreen, change the velocity (to bounce)
-        if (transform.position.x > AgentManager.Instance.maxPosition.x && velocity.x > 0)
-        {
-            velocity.x *= -1;
-        }
-        if (transform.position.x < AgentManager.Instance.minPosition.x && velocity.x < 0)
-        {
-            velocity.x *= -1;
-        }
-        if (transform.position.y > AgentManager.Instance.maxPosition.y && velocity.y > 0)
-        {
-            velocity.y *= -1;
-        }
-        if (transform.position.y < AgentManager.Instance.minPosition.y && velocity.y < 0)
-        {
-            velocity.y *= -1;
-        }
     }
 
     /// <summary>

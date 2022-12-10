@@ -11,6 +11,8 @@ public class ResourceStation : Station
 {
     public ItemType outputItem;
 
+    public Transform outputContainer;
+
     public override ItemType OutputItem => outputItem;
 
     public override bool CanTakeItem() => true;
@@ -23,4 +25,13 @@ public class ResourceStation : Station
     public override bool CanReceiveItem(ItemType item, Station station) => false;
 
     public override bool CanUse() => false;
+
+    private void Start()
+    {
+        if (outputItem != null && outputItem.objectPrefab != null)
+        {
+            ItemObject itemObj = Instantiate(outputItem.objectPrefab, outputContainer, false);
+            itemObj.StackObject(0);
+        }
+    }
 }

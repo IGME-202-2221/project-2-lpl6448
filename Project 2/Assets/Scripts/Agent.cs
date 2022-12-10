@@ -173,22 +173,54 @@ public abstract class Agent : MonoBehaviour
     }
 
     /// <summary>
-    /// If this Agent is approaching the boundary of the screen, applies a seek force
-    /// toward the middle of the screen. Specifically, if the Agent's future position (at t = 1)
+    /// If this Agent is approaching the boundary of the map, applies a seek force
+    /// toward the middle of the map. Specifically, if the Agent's future position (at t = 1)
     /// is outside of the boundaries or touching the boundaries (+- radius), the force is applied.
     /// </summary>
+    /// <param name="minPos">Minimum position of the boundaries</param>
+    /// <param name="maxPos">Maximum position of the boundaries</param>
     /// <param name="weight">Weight (multiplied into the seek steering force to stay in bounds)</param>
-    protected void StayInBounds(float weight = 1)
+    protected void StayInBounds(Vector3 minPos, Vector3 maxPos, float weight = 1)
     {
         Vector3 futurePosition = GetFuturePosition();
 
-        if (futurePosition.x < AgentManager.Instance.minPosition.x + physicsObject.radius
-            || futurePosition.x > AgentManager.Instance.maxPosition.x - physicsObject.radius
-            || futurePosition.z < AgentManager.Instance.minPosition.z + physicsObject.radius
-            || futurePosition.z > AgentManager.Instance.maxPosition.z - physicsObject.radius)
+        if (futurePosition.x < minPos.x + physicsObject.radius
+            || futurePosition.x > maxPos.x - physicsObject.radius
+            || futurePosition.z < minPos.z + physicsObject.radius
+            || futurePosition.z > maxPos.z - physicsObject.radius)
         {
-            Seek(Vector3.zero, weight);
+            Seek((minPos + maxPos) / 2, weight);
         }
+    }
+
+    /// <summary>
+    /// If this Agent is approaching the boundary of the map, applies a flee force
+    /// from the middle of the map.
+    /// </summary>
+    /// <param name="minPos">Minimum position of the boundaries</param>
+    /// <param name="maxPos">Maximum position of the boundaries</param>
+    /// <param name="weight">Weight (multiplied into the flee steering force to stay out of bounds)</param>
+    protected void StayOutOfBounds(Vector3 minPos, Vector3 maxPos, float weight = 1)
+    {
+        Vector3 futurePosition = GetFuturePosition();
+
+        if (futurePosition.x > minPos.x - physicsObject.radius
+            && futurePosition.x < maxPos.x + physicsObject.radius
+            && futurePosition.z > minPos.z - physicsObject.radius
+            && futurePosition.z < maxPos.z + physicsObject.radius)
+        {
+            Flee((minPos + maxPos) / 2, weight);
+        }
+    }
+
+    protected void Stop(float weight = 1)
+    {
+        Vector3 desiredVelocity = Vector3.zero;
+
+        Vector3 stopForce = desiredVelocity - physicsObject.Velocity;
+
+        float speedWeight = physicsObject.Velocity.magnitude;
+        totalForce += stopForce * weight * speedWeight;
     }
 
     /// <summary>
@@ -298,7 +330,12 @@ public abstract class Agent : MonoBehaviour
                 continue;
             }
 
-            if (sqrDis < personalSpace * personalSpace)
+            if (sqrDis < (physicsObject.radius + other.physicsObject.radius) * (physicsObject.radius + other.physicsObject.radius))
+            {
+                float disWeight = personalSpace * personalSpace / (sqrDis + 0.1f);
+                Flee(other.physicsObject.Position, disWeight * weight);
+            }
+            else if (sqrDis < personalSpace * personalSpace)
             {
                 // Get closest point on the segment from the other agent's position (to predict where the
                 // Agents may be when they are colliding
@@ -406,10 +443,12 @@ public abstract class Agent : MonoBehaviour
                     Seek(physicsObject.Position + seekDir, weight * disWeight);
                 }
             }
-            else
+            else if (sqrDis < combinedRadius * combinedRadius)
             {
                 // If this Agent is inside of any obstacle, prioritize leaving the obstacle
-                Flee(obstacle.Position, weight);
+                float disWeight = combinedRadius * combinedRadius / (sqrDis + 0.1f);
+                obstacleBlocked = true;
+                Flee(obstacle.Position, weight * disWeight);
             }
         }
 
@@ -427,7 +466,7 @@ public abstract class Agent : MonoBehaviour
     /// <param name="dir">Direction this Agent is assumed to be moving (used to avoid the irregularity of the PhysicsObject's Direction vector)</param>
     /// <param name="dis">Output Vector2 containing the signed distances to the right (x) and forward (y)</param>
     /// <returns>Whether the Obstacle is blocking this Agent's path</returns>
-    private bool IsObstacleBlocking(Obstacle obstacle, Vector3 dir, out Vector2 dis)
+    protected bool IsObstacleBlocking(Obstacle obstacle, Vector3 dir, out Vector2 dis)
     {
         dis = Vector2.zero;
         Vector3 rightDir = new Vector3(dir.z, 0, -dir.x);

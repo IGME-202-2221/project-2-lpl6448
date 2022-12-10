@@ -12,6 +12,18 @@ public class ToyStation : Station
 {
     private ItemType outputItem;
 
+    private bool outputItemBeingTaken = false;
+
+    public Transform stackedContainer;
+
+    public Transform outputContainer;
+
+    private Stack<ItemObject> stackedItems = new Stack<ItemObject>();
+
+    private float stackedItemsHeight = 0;
+
+    private ItemObject outputItemObj;
+
     public ItemType pendingBuildItem;
 
     public List<ItemType> inputItems = new List<ItemType>();
@@ -20,57 +32,57 @@ public class ToyStation : Station
 
     public override ItemType OutputItem => outputItem;
 
-    public override bool CanTakeItem() => outputItem != null;
+    public override bool CanTakeItem() => outputItem != null && !outputItemBeingTaken;
+
+    public override void PrepareToTakeItem()
+    {
+        outputItemBeingTaken = true;
+    }
 
     public override ItemType TakeItem()
     {
         ItemType item = outputItem;
         outputItem = null;
+        outputItemBeingTaken = false;
+        stationCanvas.SetItem(pendingBuildItem);
+        if (outputItemObj != null)
+        {
+            Destroy(outputItemObj.gameObject);
+            outputItemObj = null;
+        }
         return item;
     }
 
     public override bool CanReceiveItem(ItemType item, Station station)
     {
-        if (occupied)
+        // If an item is not currently being built at this station or it is already
+        // being used, it cannot receive any input items
+        if (occupied || pendingBuildItem == null)
         {
             return false;
         }
 
+        // A station with an output item cannot receive any input items
+        // (unless the output item is being moved to the same station)
         if (outputItem != null && station != this)
         {
             return false;
         }
 
-        if (pendingBuildItem != null)
+        // If the input item is not required for the pending item's recipe, do not accept it
+        List<ItemType> ingredients = new List<ItemType>(pendingBuildItem.ingredients);
+        foreach (ItemType ingredient in inputItems)
         {
-            List<ItemType> ingredients = new List<ItemType>(pendingBuildItem.ingredients);
-            foreach (ItemType ingredient in inputItems)
-            {
-                ingredients.Remove(ingredient);
-            }
-            foreach (ItemType ingredient in inputItemsInTransit)
-            {
-                ingredients.Remove(ingredient);
-            }
-            
-            if (!ingredients.Contains(item))
-            {
-                return false;
-            }
+            ingredients.Remove(ingredient);
+        }
+        foreach (ItemType ingredient in inputItemsInTransit)
+        {
+            ingredients.Remove(ingredient);
         }
 
-        // If adding the new item would make it so no items can be crafted, do not receive the item
-        if (pendingBuildItem == null)
+        if (!ingredients.Contains(item))
         {
-            List<ItemType> inputs = new List<ItemType>();
-            inputs.AddRange(inputItems);
-            inputs.AddRange(inputItemsInTransit);
-            inputs.Add(item);
-            HashSet<ItemType> potentialCrafts = FindPotentialCrafts(inputs);
-            if (potentialCrafts.Count == 0)
-            {
-                return false;
-            }
+            return false;
         }
 
         return true;
@@ -79,29 +91,14 @@ public class ToyStation : Station
     public override void PrepareToReceiveItem(ItemType item)
     {
         inputItemsInTransit.Add(item);
-
-        if (pendingBuildItem == null)
-        {
-            List<ItemType> inputs = new List<ItemType>();
-            inputs.AddRange(inputItems);
-            inputs.AddRange(inputItemsInTransit);
-            HashSet<ItemType> potentialCrafts = FindPotentialCrafts(inputs);
-            if (potentialCrafts.Count == 1)
-            {
-                foreach (ItemType a in potentialCrafts)
-                {
-                    pendingBuildItem = a;
-                    break;
-                }
-                Taskmaster.Instance.itemsBuilding.Remove(pendingBuildItem);
-            }
-        }
     }
 
     public override void ReceiveItem(ItemType item)
     {
         inputItemsInTransit.Remove(item);
         inputItems.Add(item);
+
+        StackItem(item);
 
         // If we have all of the items to build an item, build it
         if (CanUse())
@@ -112,13 +109,15 @@ public class ToyStation : Station
 
     public override bool CanUse()
     {
-        return pendingBuildItem != null && inputItems.Count == pendingBuildItem.ingredients.Length;
+        return pendingBuildItem != null && inputItems.Count == pendingBuildItem.ingredients.Count;
     }
 
     public override void BeginUse()
     {
         occupied = true;
     }
+
+    public override string UsingAnimation => "Hammering";
 
     public override void EndUse()
     {
@@ -127,41 +126,69 @@ public class ToyStation : Station
         inputItems.Clear();
         pendingBuildItem = null;
 
+        outputItemObj = Instantiate(outputItem.objectPrefab, outputContainer, false);
+        outputItemObj.StackObject(0);
+
+        while (stackedItems.Count > 0)
+        {
+            UnstackItem();
+        }
+
         Taskmaster.Instance.FinishBuildingItem(outputItem);
 
-        GatherTask newTask = new GatherTask(outputItem);
-        newTask.SetStation(this);
-        Taskmaster.Instance.AddTask(newTask);
+        //GatherTask newTask = new GatherTask(outputItem);
+        //newTask.SetStation(this);
+        //Taskmaster.Instance.AddTask(newTask);
     }
 
-    private HashSet<ItemType> FindPotentialCrafts(List<ItemType> inputs)
+    public override bool CanAcceptUserItem(ItemType item)
     {
-        HashSet<ItemType> craftedItems = new HashSet<ItemType>();
-        foreach (ItemType craftedItem in Taskmaster.Instance.itemsBuilding)
+        // If we are currently building an item, do not accept
+        if (pendingBuildItem != null || occupied)
         {
-            // If there are more inputs than ingredients, this cannot be a potential craft
-            if (inputs.Count > craftedItem.ingredients.Length)
-            {
-                continue;
-            }
-
-            // Each item in the inputs list must be in the ingredients for it to be a potential craft
-            List<ItemType> ingredients = new List<ItemType>(craftedItem.ingredients);
-            bool isPotentialCraft = true;
-            foreach (ItemType ingredient in inputs)
-            {
-                if (!ingredients.Remove(ingredient))
-                {
-                    isPotentialCraft = false;
-                    break;
-                }
-            }
-
-            if (isPotentialCraft)
-            {
-                craftedItems.Add(craftedItem);
-            }
+            return false;
         }
-        return craftedItems;
+
+        // If this station has an output item, do not accept unless it is an ingredient for the user item
+        if (outputItem != null && !item.ingredients.Contains(outputItem))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    public override void AcceptUserItem(ItemType item)
+    {
+        pendingBuildItem = item;
+        stationCanvas.SetItem(item);
+
+        // Initialize tasks to collect the necessary items
+        foreach (ItemType ingredient in item.ingredients)
+        {
+            Taskmaster.Instance.AddTask(new GatherTask(ingredient));
+        }
+    }
+
+    private void StackItem(ItemType item)
+    {
+        ItemObject itemObj = Instantiate(item.objectPrefab, stackedContainer, false);
+        itemObj.StackObject(stackedItemsHeight);
+
+        stackedItemsHeight += itemObj.stackedHeight;
+        stackedItems.Push(itemObj);
+    }
+
+    private void UnstackItem()
+    {
+        ItemObject itemObj = stackedItems.Pop();
+
+        stackedItemsHeight -= itemObj.stackedHeight;
+        Destroy(itemObj.gameObject);
+    }
+
+    private void Start()
+    {
+        stationCanvas.SetItem(null);
     }
 }

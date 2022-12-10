@@ -10,6 +10,8 @@
 /// </summary>
 public abstract class Station : MonoBehaviour
 {
+    public StationCanvas stationCanvas;
+
     public Transform elfItemCenter;
 
     public float elfItemRadius;
@@ -46,6 +48,12 @@ public abstract class Station : MonoBehaviour
     public virtual void BeginUse() { }
 
     public virtual void EndUse() { }
+
+    public virtual string UsingAnimation => "";
+
+    public virtual bool CanAcceptUserItem(ItemType item) => false;
+
+    public virtual void AcceptUserItem(ItemType item) { }
 
 
     private void OnDrawGizmosSelected()

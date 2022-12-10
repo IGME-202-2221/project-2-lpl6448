@@ -15,17 +15,16 @@ public class Taskmaster : MonoBehaviour
 {
     public static Taskmaster Instance;
 
-    public List<ItemType> initItems = new List<ItemType>();
+    public List<ItemType> requestedItems = new List<ItemType>();
 
-    public List<ItemType> itemsBuilding = new List<ItemType>();
+    public List<ItemType> itemsToCraft = new List<ItemType>();
 
     private List<Task> tasks = new List<Task>();
-
-    private Queue<ItemType> itemsToBuild = new Queue<ItemType>();
 
     public void AddTask(Task task)
     {
         tasks.Add(task);
+        UIManager.Instance.RefreshCanBuild();
     }
 
     public bool TryTakeTask(Elf elf, out Task task)
@@ -58,11 +57,45 @@ public class Taskmaster : MonoBehaviour
 
     public void FinishBuildingItem(ItemType item)
     {
-        if (itemsToBuild.Count > 0)
+        //if (itemsToBuild.Count > 0)
+        //{
+        //    ItemType newItem = itemsToBuild.Dequeue();
+        //    AddItemToCurrentlyBuilding(newItem);
+        //}
+        UIManager.Instance.RefreshCanBuild();
+
+        if (requestedItems.Contains(item))
         {
-            ItemType newItem = itemsToBuild.Dequeue();
-            AddItemToCurrentlyBuilding(newItem);
+            GatherTask task = new GatherTask(item);
+            AddTask(task);
         }
+    }
+
+    public void BeginBuildingItem(ItemType item, Station station)
+    {
+        itemsToCraft.Remove(item);
+        station.AcceptUserItem(item);
+    }
+
+    public bool CanBuildItem(ItemType item)
+    {
+        // When all of the currently building items are finished, another of this item still must be needed
+        if (!itemsToCraft.Contains(item))
+        {
+            return false;
+        }
+
+        // At least one station must be able to accept this item
+        //foreach (Station station in WorldManager.Instance.stations)
+        //{
+        //    if (station.CanAcceptUserItem(item))
+        //    {
+        //        return true;
+        //    }
+        //}
+        //return false;
+
+        return true;
     }
 
     private void Awake()
@@ -72,41 +105,22 @@ public class Taskmaster : MonoBehaviour
             Instance = this;
         }
 
-        foreach (ItemType item in initItems)
+        foreach (ItemType item in requestedItems)
         {
             InitItem(item);
         }
 
-        while (itemsToBuild.Count > 0)
-        {
-            ItemType newItem = itemsToBuild.Dequeue();
-            AddItemToCurrentlyBuilding(newItem);
-        }
+        UIManager.Instance.craftingPanel.Populate(requestedItems);
     }
 
     private void InitItem(ItemType item)
     {
         if (item.craftable)
         {
-            itemsToBuild.Enqueue(item);
+            itemsToCraft.Add(item);
             foreach (ItemType ingredient in item.ingredients)
             {
                 InitItem(ingredient);
-            }
-        }
-    }
-
-    private void AddItemToCurrentlyBuilding(ItemType item)
-    {
-        if (item.craftable)
-        {
-            itemsBuilding.Add(item);
-            foreach (ItemType ingredient in item.ingredients)
-            {
-                if (!ingredient.craftable)
-                {
-                    AddTask(new GatherTask(ingredient));
-                }
             }
         }
     }

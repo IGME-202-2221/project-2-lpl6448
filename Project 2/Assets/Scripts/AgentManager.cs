@@ -15,29 +15,18 @@ public class AgentManager : MonoBehaviour
     public static AgentManager Instance;
 
     /// <summary>
-    /// Units of padding of the world boundaries from the camera area
-    /// </summary>
-    public float edgePadding = 1;
-
-    /// <summary>
     /// Agent prefab to spawn in on Awake
     /// </summary>
-    public Agent agentPrefab;
+    public Agent elfPrefab;
 
     /// <summary>
     /// Number of agentPrefabs to spawn in on Awake
     /// </summary>
-    public int numAgents = 10;
+    public int numElves = 10;
 
-    /// <summary>
-    /// Minimum (lower-left) corner of the world boundaries
-    /// </summary>
-    public Vector3 minPosition = -Vector3.one;
+    public Agent snowmanPrefab;
 
-    /// <summary>
-    /// Maximum (upper-right) corner of the world boundaries
-    /// </summary>
-    public Vector3 maxPosition = Vector3.one;
+    public int numSnowmen = 5;
 
     /// <summary>
     /// List of Agents in the scene, used for separate forces
@@ -54,34 +43,52 @@ public class AgentManager : MonoBehaviour
             Instance = this;
         }
 
-        for (int i = 0; i < numAgents; i++)
+        for (int i = 0; i < numElves; i++)
         {
-            agents.Add(Spawn(agentPrefab));
+            agents.Add(SpawnElf(elfPrefab));
+        }
+        for (int i =0; i < numSnowmen; i++)
+        {
+            agents.Add(SpawnSnowman(snowmanPrefab));
         }
     }
 
     /// <summary>
-    /// Instantiates the prefab at a random position within the world boundaries
+    /// Instantiates the prefab at a random position within the elf boundaries
     /// </summary>
     /// <typeparam name="T">Type of Agent to spawn</typeparam>
     /// <param name="prefab">Prefab Agent that will be spawned in a random location in the world</param>
     /// <returns>The Agent (generic) that was spawned</returns>
-    private T Spawn<T>(T prefab) where T : Agent
+    private T SpawnElf<T>(T prefab) where T : Agent
     {
         Vector3 pos = new Vector3(
-            Random.Range(minPosition.x, maxPosition.x),
+            Random.Range(-WorldManager.Instance.elfWorldExtents.x, WorldManager.Instance.elfWorldExtents.x),
             0,
-            Random.Range(minPosition.z, maxPosition.z));
+            Random.Range(-WorldManager.Instance.elfWorldExtents.z, WorldManager.Instance.elfWorldExtents.z));
 
         return Instantiate(prefab, pos, Quaternion.identity, transform);
     }
 
     /// <summary>
-    /// When selected, draws a yellow wire cube to represent the world bounds
+    /// Instantiates the prefab at a random position within the snowman boundaries but outside the elf boundaries
     /// </summary>
-    private void OnDrawGizmosSelected()
+    /// <typeparam name="T">Type of Agent to spawn</typeparam>
+    /// <param name="prefab">Prefab Agent that will be spawned in a random location in the world</param>
+    /// <returns>The Agent (generic) that was spawned</returns>
+    private T SpawnSnowman<T>(T prefab) where T : Agent
     {
-        Gizmos.color = Color.yellow;
-        Gizmos.DrawWireCube((minPosition + maxPosition) / 2, maxPosition - minPosition);
+        Vector3 pos = Vector3.zero;
+        while (pos.x > -WorldManager.Instance.elfWorldExtents.x
+            && pos.x < WorldManager.Instance.elfWorldExtents.x
+            && pos.z > -WorldManager.Instance.elfWorldExtents.z
+            && pos.z < WorldManager.Instance.elfWorldExtents.z)
+        {
+            pos = new Vector3(
+                Random.Range(-WorldManager.Instance.snowmanWorldExtents.x, WorldManager.Instance.snowmanWorldExtents.x),
+                0,
+                Random.Range(-WorldManager.Instance.snowmanWorldExtents.z, WorldManager.Instance.snowmanWorldExtents.z));
+        }
+
+        return Instantiate(prefab, pos, Quaternion.identity, transform);
     }
 }

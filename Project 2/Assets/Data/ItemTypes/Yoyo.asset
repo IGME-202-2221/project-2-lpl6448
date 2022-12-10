@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Yoyo
   m_EditorClassIdentifier: 
   displayName: Yoyo
-  carryPrefab: {fileID: 2071284262385527565, guid: cffacb8ceaaa3594ca8e39f7af184b56, type: 3}
+  objectPrefab: {fileID: 2232049771084787899, guid: c5c5a86d1b1f7af4f8ee0c560097bb99, type: 3}
   craftable: 1
   ingredients:
   - {fileID: 11400000, guid: 660816c4af068ca4eaa3c9c4f4823047, type: 2}

@@ -13,6 +13,7 @@ MonoBehaviour:
   m_Name: Resource_Cotton
   m_EditorClassIdentifier: 
   displayName: Cotton
-  carryPrefab: {fileID: 3843491807948285934, guid: 3e9c6c5199234e1459c9156e16186652, type: 3}
+  icon: {fileID: 21300000, guid: 87733776ae4dc7d4fb80debc33b7fda2, type: 3}
+  objectPrefab: {fileID: 5223481961751885676, guid: 3e9c6c5199234e1459c9156e16186652, type: 3}
   craftable: 0
   ingredients: []

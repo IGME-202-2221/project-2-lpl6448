@@ -22,18 +22,18 @@ public class ConveyorStation : Station
 
     public override bool CanReceiveItem(ItemType item, Station station)
     {
-        return Taskmaster.Instance.initItems.Contains(item);
+        return Taskmaster.Instance.requestedItems.Contains(item);
     }
 
     public override void PrepareToReceiveItem(ItemType item)
     {
-        Taskmaster.Instance.initItems.Remove(item);
+        Taskmaster.Instance.requestedItems.Remove(item);
     }
 
     public override void ReceiveItem(ItemType item)
     {
         print(item + " delivered");
-        if (Taskmaster.Instance.initItems.Count == 0)
+        if (Taskmaster.Instance.requestedItems.Count == 0)
         {
             print("Finished! Elapsed time: " + (Time.time - startTime) + "s");
         }
