@@ -119,7 +119,7 @@ public class PhysicsObject : MonoBehaviour
 
 
         // Calculate a new velocity based on acceleration
-        velocity += acceleration * Time.deltaTime;
+        velocity += acceleration * Mathf.Min(Time.deltaTime, 0.125f); // Sometimes, in an initial lag spike objects could have unrealistic amounts of acceleration applied
 
         // Calculate the new position based on velocity
         transform.position += velocity * Time.deltaTime;

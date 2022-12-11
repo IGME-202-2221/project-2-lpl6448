@@ -244,7 +244,7 @@ MonoBehaviour:
   elfItemCenter: {fileID: 651653579627090759}
   elfItemRadius: 1.8
   elfUseCenter: {fileID: 651653579229315376}
-  elfUseRadius: 0.1
+  elfUseRadius: 0.2
   stackedContainer: {fileID: 8240307077978405067}
   outputContainer: {fileID: 8351965633060952018}
   pendingBuildItem: {fileID: 0}

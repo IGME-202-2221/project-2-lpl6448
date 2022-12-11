@@ -1,8 +1,4 @@
-# Project _NAME_
-
-[Markdown Cheatsheet](https://github.com/adam-p/markdown-here/wiki/Markdown-Here-Cheatsheet)
-
-_REPLACE OR REMOVE EVERYTING BETWEEN "\_"_
+# Project "Elf Extravaganza"
 
 ### Student Info
 
@@ -11,13 +7,20 @@ _REPLACE OR REMOVE EVERYTING BETWEEN "\_"_
 
 ## Simulation Design
 
-This will be a Christmas-themed game where help Santa's elves meet their quotas. Elves will walk around the workshop, grabbing parts and making toys, as evil snowmen try to stop them by chasing and throwing snowballs at the elves.
+This is a Christmas-themed game where you must help Santa's elves meet their quotas. Elves will walk around the workshop, grabbing parts and making toys, as evil snowmen try to stop them by throwing snowballs into the workshop.
 
 ### Controls
 
--   _List all of the actions the player can have in your simulation_
-    -   _Include how to preform each action ( keyboard, mouse, UI Input )_
-    -   _Include what impact an action has in the simulation ( if is could be unclear )_
+-  Hold down right click to enter Camera mode.
+    -   Move the mouse to rotate the camera.
+    -   Zoom in and out using the scroll wheel.
+-  The Crafting panel shows which items still need to be crafted.
+    -   You can expand and collapse the ingredients required to build certain items by clicking the button to the left of the item.
+    -   If the crafting button to the right of an item is green, you can click it to enter Craft mode.
+    -   Once in Craft mode, all stations that can craft this item have a green circle underneath them.
+        - If a station has a red circle, it is either already crafting an item, or the item that it just finished crafting must be moved.
+    -   Click a station highlighted green to craft the item at that station.
+    -   Once a root-level item (like a Toy Car or a Teddy Bear) is crafted, the elves will move it to the launch pad, where it will be launched into the sky and delivered to Santa.
 
 ## Elf
 
@@ -35,16 +38,16 @@ These tasks are stored separately from the elf's states, but they influence how 
 #### Steering Behaviors
 
 - Behaviors
-   - Wander around the map.
-   - Flee from snowmen within a certain radius
+   - Wander around the map
    - Stay within the workshop bounds
+   - Separate from nearby agents
 - Obstacles - Stations (other than the chosen station)
-- Separation - Elves, Snowmen
+- Predictive/Custom Separation - Elves, Snowmen
    
 #### State Transistions
 
-- When this elf delivers a part/toy to a station
-- When this elf is no longer frozen
+- Initial state
+- When this elf completes a task and cannot find a new task
    
 ### Walking to Task
 
@@ -53,16 +56,16 @@ These tasks are stored separately from the elf's states, but they influence how 
 #### Steering Behaviors
 
 - Behaviors
-   - Seek chosen station (station will be chosen in the transition to this state)
-   - Flee from snowmen within a certain radius
+   - Seek chosen station (station will be chosen in the transition to this state). To improve obstacle avoidance, the seek and obstacle avoidance functionalities are combined.
    - Stay within the workshop bounds
-- Obstacles - Stations (other than the chosen station), dropped parts/toys
-- Separation - Elves, Snowmen
+   - Separate from nearby agents
+- Obstacles (Custom Avoidance) - Stations (other than the chosen station), dropped parts/toys
+- Predictive/Custom Separation - Elves, Snowmen
    
 #### State Transistions
 
-- When this elf finishes work at a station
-- When this elf touches a dropped part/toy
+- When the user starts a new task and this elf chooses it
+- When this elf completes a task and successfully finds a new task
    
 ### Processing Task
 
@@ -77,78 +80,62 @@ These tasks are stored separately from the elf's states, but they influence how 
    
 #### State Transistions
 
-- When this elf approaches a station (if looking for work)
-   
-### Frozen
-
-**Objective:** Wait for the cooldown to become unfrozen.
-
-#### Steering Behaviors
-
-- Behaviors
-   - Play frozen effect
-   - Drop current part/toy
-- Obstacles - None (because the elf is stationary)
-- Separation - None
-   
-#### State Transistions
-
-- When this elf is touched by a snowman
-- When this elf is hit by a snowball
+- When this elf approaches the chosen station in the Walking to Task state
 
 ## Snowman
 
-The snowman will wander around the map, attempting to freeze elves by touching them or throwing snowballs.
+The snowman will wander around the outside of the map, throwing snowballs onto the map that create temporary snow piles for elves to avoid.
 
-### Throwing
+### Wandering
 
-**Objective:** Wander around the outside of the map, throwing snowballs at nearby elves.
+**Objective:** Wander around the outside of the map.
 
 #### Steering Behaviors
 
 - Behaviors
    - Wander
    - Stay outside of the workshop bounds
-   - Stay within the map bounds
-   - Throw snowballs at nearby elves occasionally
-- Obstacles - Stations, dropped parts/toys
-- Separation - Snowmen, elves
+   - Stay within the larger map bounds
+   - Separate from nearby agents
+- Obstacles - Trees
+- Separation - Snowmen, Elves
    
 #### State Transistions
 
-- When this snowman touches and freezes an elf
+- Initial state
+- After this snowman finishes throwing a snowball
    
-### Charging
+### Throwing
 
-**Objective:** Run into the workshop and freeze an elf.
+**Objective:** Stop, turn red (indicator), and throw a snowball onto a random location in the workshop.
 
 #### Steering Behaviors
 
 - Behaviors
-   - Seek the nearest elf
-   - Stay within the map bounds
-- Obstacles - Stations, dropped parts/toys
-- Separation - Snowmen
+   - Stop (custom steering behavior) and face in the direction the snowball will be thrown
+- Obstacles - None
+- Separation - None
    
 #### State Transistions
 
-- Random chance after throwing a snowball
+- Random chance while wandering
 
 ## Sources
 
--   _List all project sources here –models, textures, sound clips, assets, etc._
--   _If an asset is from the Unity store, include a link to the page and the author’s name_
+-   The snowman model and animation was created by my cousin for a previous project.
+-   All other models and assets were created by me.
 
 ## Make it Your Own
 
-- I added two more states to the elf (Working and Frozen). These states do not have steering forces because they effectively freeze the elf.
-- I will make the game in 3D (using a mostly topdown perspective) and will let the player rotate the camera around the workshop.
+-   I created a more advanced state system for elves, letting them accept and complete various tasks, working as a team to craft items.
+-   The game is in 3D and lets the player rotate the camera around the workshop.
+-   I created the game's voxel art using MagicaVoxel and added some extra environment art to make the game look more interesting.
 
 ## Known Issues
 
-_List any errors, lack of error checking, or specific information that I need to know to run your program_
+-   WebGL cannot properly "lock" the cursor while in Camera mode, so the cursor can occasionally go out of the game's frame while moving the camera.
+-   The custom separation and obstacle avoidance algorithms still can cause elves to get stuck occasionally, especially if there are many elves in the same region.
 
 ### Requirements not completed
 
-_If you did not complete a project requirement, notate that here_
-
+All requirements were completed.

@@ -213,6 +213,11 @@ public abstract class Agent : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Applies a force to stop this Agent (desired velocity = 0).
+    /// The stop force is proportional to the current speed.
+    /// </summary>
+    /// <param name="weight">Weight (multiplied into the stop steering force)</param>
     protected void Stop(float weight = 1)
     {
         Vector3 desiredVelocity = Vector3.zero;
