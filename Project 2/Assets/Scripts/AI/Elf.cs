@@ -5,11 +5,15 @@
 /// elements like an animator and the reference to the item being carried.
 /// 
 /// Author: Luke Lepkowski (lpl6448@rit.edu)
-/// 
-/// DOCUMENTATION UNFINISHED
 /// </summary>
 public class Elf : Agent
 {
+    /// <summary>
+    /// Contains the three main states that Elves can be in (not including Tasks)
+    /// WaitingForTask: The Elf has no Task currently but tries to claim a new one every frame.
+    /// WalkingToTask: The Elf is walking to the Station of its active Task.
+    /// ProcessingTask: The Elf is at the Station of its active Task, completing the Task.
+    /// </summary>
     public enum ElfState
     {
         WaitingForTask,
@@ -17,28 +21,65 @@ public class Elf : Agent
         ProcessingTask,
     }
 
+    /// <summary>
+    /// Reference to the Animator for this Elf, used to control its model and animation
+    /// </summary>
     public Animator animator;
 
+    /// <summary>
+    /// Reference to the ElfCanvas for this Elf, used to make a question mark appear above Elves without Tasks
+    /// </summary>
     public ElfCanvas elfCanvas;
 
+    /// <summary>
+    /// Anchor/parent Transform of the item that is being carried by this Elf
+    /// </summary>
     public Transform carryItemAnchor;
 
+    /// <summary>
+    /// ItemType that this Elf is currently carrying (or null if no item is being carried)
+    /// </summary>
     public ItemType carryingItem;
 
+    /// <summary>
+    /// This Elf's current ElfState
+    /// </summary>
     public ElfState state;
 
+    /// <summary>
+    /// Max speed of the Agent when an item is being carried
+    /// </summary>
     public float maxSpeedWhenCarrying = 3;
 
+    /// <summary>
+    /// Max speed of the Agent when this Elf is wandering
+    /// </summary>
     public float maxSpeedWhenWandering = 4;
 
+    /// <summary>
+    /// Max speed of the Agent when an item is not being carried (when this Elf is walking to collect an item)
+    /// </summary>
     public float maxSpeedWhenNotCarrying = 5;
 
+    /// <summary>
+    /// Current Task that this Elf is trying to complete
+    /// </summary>
     private Task activeTask;
 
+    /// <summary>
+    /// In-game time when this Elf most recently changed its state
+    /// </summary>
     private float stateStartTime;
 
+    /// <summary>
+    /// Current ItemObject being carried by the elf (or null if no item is being carried)
+    /// </summary>
     private ItemObject carryItemObj;
 
+    /// <summary>
+    /// Begins to visibly carry the given item by instantiating the item's ItemObject
+    /// </summary>
+    /// <param name="item">ItemType to carry</param>
     public void CarryItem(ItemType item)
     {
         carryingItem = item;
@@ -50,6 +91,9 @@ public class Elf : Agent
         }
     }
 
+    /// <summary>
+    /// Drops the current carrying item, destroying the ItemObject
+    /// </summary>
     public void DropItem()
     {
         carryingItem = null;
@@ -61,6 +105,10 @@ public class Elf : Agent
         }
     }
 
+    /// <summary>
+    /// Calculates and applies all of the steering forces for this frame, based on the Elf's state,
+    /// and does additional per-frame logic to update the animator and process Tasks
+    /// </summary>
     protected override void CalculateSteeringForces()
     {
         if (state == ElfState.WaitingForTask)
@@ -145,6 +193,10 @@ public class Elf : Agent
         animator.SetBool("Carrying", carryingItem != null);
     }
 
+    /// <summary>
+    /// Attempts to take a new Task. If there are no Tasks available, this function is called
+    /// every frame until a Task becomes available.
+    /// </summary>
     private void TakeNewTask()
     {
         if (Taskmaster.Instance.TryTakeTask(this, out Task task))

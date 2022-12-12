@@ -3185,7 +3185,6 @@ MonoBehaviour:
   orbitPositionExtents: {x: 10, y: 0, z: 10}
   orbitMoveLerp: 0.01
   zoomSensitivity: 0.0005
-  zoomLerp: 0.001
   zoomSpring: 100
   minZoomDistance: 2
   maxZoomDistance: 30
@@ -10690,7 +10689,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   indicatorAnimation: {fileID: 295246067}
   tutorialText: {fileID: 779646452}
-  minimumSelectionDistance: 3
+  selectionDistance: 3
 --- !u!1 &1615137674
 GameObject:
   m_ObjectHideFlags: 0

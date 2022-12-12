@@ -51,8 +51,9 @@
         {
             // Albedo comes from a texture tinted by color
 			fixed4 color;
-			if (IN.normal.z > -0.5)
+			if (ddy(IN.uv_MainTex.y) > 0)
 				IN.uv_MainTex.y = 1 - IN.uv_MainTex.y;
+
 			if (_Transition <= 0)
 				color = _BaseColor;
 			else if (_Transition >= 1)

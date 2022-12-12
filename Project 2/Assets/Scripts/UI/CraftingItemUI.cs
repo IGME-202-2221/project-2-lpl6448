@@ -3,36 +3,86 @@ using UnityEngine.UI;
 using TMPro;
 using System.Collections.Generic;
 
+/// <summary>
+/// Represents the UI element for a specific crafting or resource item, which displays information
+/// about the item, such as name, icon, and craftability.
+/// 
+/// Author: Luke Lepkowski (lpl6448@rit.edu)
+/// </summary>
 public class CraftingItemUI : MonoBehaviour
 {
-    public RectTransform contentAreaTransform;
-
+    /// <summary>
+    /// ItemType that this CraftingItemUI displays information about
+    /// </summary>
     public ItemType item;
 
+    /// <summary>
+    /// RectTransform that contains information about the item, used to indent
+    ///     ingredient or resource items forward.
+    /// </summary>
+    public RectTransform contentAreaTransform;
+
+    /// <summary>
+    /// TextMeshPro element that contains the name of the item
+    /// </summary>
     public TextMeshProUGUI itemNameText;
 
+    /// <summary>
+    /// Image containing the item's icon
+    /// </summary>
     public Image itemIcon;
 
+    /// <summary>
+    /// TestMeshPro element containing the number of this item that are required for crafting
+    /// </summary>
     public TextMeshProUGUI itemMultiplierText;
 
+    /// <summary>
+    /// Button that enters Crafting mode based on this item when clicked
+    /// </summary>
     public Button craftButton;
 
+    /// <summary>
+    /// Button that expands or collapses ingredient items
+    /// </summary>
     public Button expandButton;
 
+    /// <summary>
+    /// List of nested (or ingredient) CraftingItemUIs that are activated/deactived when expanding/collapsing
+    /// </summary>
     public List<CraftingItemUI> nestedItems;
 
+    /// <summary>
+    /// Number of (scaled) pixels to indent the contentAreaTransform by per level
+    /// </summary>
     public float indentFactor = 60;
 
+    /// <summary>
+    /// Whether this CraftingItemUI is currently expanded (whether its nestedItems are visible)
+    /// </summary>
     private bool expanded;
 
+    /// <summary>
+    /// Whether the item can currently be crafted
+    /// </summary>
     private bool canCraft;
 
+    /// <summary>
+    /// Updates the canCraft field and the interactability of the craftButton
+    /// </summary>
+    /// <param name="canCraft">Whether the item can currently be crafted</param>
     public void SetCanCraft(bool canCraft)
     {
         this.canCraft = canCraft;
         craftButton.interactable = canCraft;
     }
 
+    /// <summary>
+    /// Initializes this CraftingItemUI, displaying the given item, indent, and multiplier
+    /// </summary>
+    /// <param name="item">ItemType that this CraftingItemUI will contain information about</param>
+    /// <param name="indent">Number of indents/levels to apply to the contentAreaTransform</param>
+    /// <param name="multiplier">Number of the item that is required for crafting</param>
     public void InitializeItem(ItemType item, int indent, int multiplier)
     {
         this.item = item;
@@ -58,6 +108,9 @@ public class CraftingItemUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Collapses this CraftingItemUI, disabling all nestedItems
+    /// </summary>
     public void Collapse()
     {
         expanded = false;
@@ -68,6 +121,10 @@ public class CraftingItemUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Expands this CraftingItemUI, enabling all nestedItems and expanding any
+    /// that were previously expanded
+    /// </summary>
     public void Expand()
     {
         expanded = true;
@@ -82,6 +139,9 @@ public class CraftingItemUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Deactivates this CraftingItemUI and recursively deactivates all nestedItems
+    /// </summary>
     private void Disable()
     {
         gameObject.SetActive(false);
@@ -91,6 +151,9 @@ public class CraftingItemUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// Toggles the expanded field and expands or collapes this CraftingItemUI as necessary
+    /// </summary>
     public void ToggleExpanded()
     {
         expanded = !expanded;
@@ -104,6 +167,9 @@ public class CraftingItemUI : MonoBehaviour
         }
     }
 
+    /// <summary>
+    /// If the item can currently be crafted, enters Crafting mode through the CraftingPanel
+    /// </summary>
     public void CraftItem()
     {
         if (canCraft)
